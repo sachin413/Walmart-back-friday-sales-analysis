@@ -1,0 +1,57 @@
+Sales Transactions
+transaction_id:string, product_id: string, timestamp: timestamp,quantity:integer,unit_price:float,store_id:string
+
+Inventory Updates
+product_id:string, timestamp:timestamp, quantity_change:integer,store_id:string
+
+
+Products
+product_id:string, name:string, category:string,price:float, supplier_id:string
+
+Stores
+store_id: string, location: string, size:integer, manager:string
+
+
+LOAD DATA OVERWRITE walmart_sales.stores
+FROM FILES (
+  format = 'CSV',
+  uris = ['gs://dimensions_hackathon/stores.csv']);
+
+
+LOAD DATA OVERWRITE walmart_sales.products
+FROM FILES (
+  format = 'CSV',
+  uris = ['gs://dimensions_hackathon/products.csv']);
+  
+ CREATE VIEW walmart_sales.revenue_by_location(location, total_revenue_per_region) AS (
+  select s.location, round(sum(st.quantity*st.unit_price),2) as total_revenue_per_region
+ from `hive-project-new-412916.walmart_sales.stores` as s 
+ join `hive-project-new-412916.walmart_sales.Sales` as st on s.store_id=st.store_id
+ group by s.location
+ order by 2 desc
+);
+
+ CREATE VIEW walmart_sales.daily_sales(day, total_sales) AS (
+select TIMESTAMP_TRUNC(timestamp, DAY) as day,sum(quantity) as total_sales from `hive-project-new-412916.walmart_sales.Sales`
+group by 1);
+
+CREATE VIEW walmart_sales.hourly_sales(hour, total_sales) AS (
+select TIMESTAMP_TRUNC(timestamp, HOUR) as hour,sum(quantity) as total_sales from `hive-project-new-412916.walmart_sales.Sales`
+group by 1)
+
+
+CREATE VIEW walmart_sales.category_wise_revenue(hour, total_sales) AS (
+select  p.category,round(sum(st.quantity*st.unit_price),2) as total_revenue
+from `hive-project-new-412916.walmart_sales.Sales` st join 
+`hive-project-new-412916.walmart_sales.products` p on st.product_id=p.product_id 
+group by p.category
+order by p.category desc)
+
+CREATE VIEW walmart_sales.sales_revenue_by_store(store_id,total_sales,total_revenue) as (
+select s.store_id,sum(st.quantity) as total_sales, round(sum(st.quantity*st.unit_price),2) as total_revenue
+from `hive-project-new-412916.walmart_sales.stores` s join `hive-project-new-412916.walmart_sales.Sales` st 
+on s.store_id=st.store_id
+group by 1
+order by 1)
+
+
