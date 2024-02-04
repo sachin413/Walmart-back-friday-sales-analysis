@@ -1,0 +1,31 @@
+Installation steps:
+
+1.Install latest version of python on your local machine.
+2.Create GCP account and enable Cloud Pub/Sub API,BigQuery API and Dataflow API
+
+
+Usage Instructions:
+
+1.Run the generate_mock_data.py  script to generate below kind of mock up data into csv file which required for sales transactions and inventory updates
+
+Stream 1: Sales Transactions Stream
+Fields: transaction_id, product_id, timestamp, quantity, unit_price, store_id
+Sample data:
+{ "transaction_id": "T1001", "product_id": "P501", "timestamp": "2023-11-24
+00:01:00", "quantity": 2, "unit_price": 299.99, "store_id": "W001" }
+
+Stream 2: Inventory Updates Stream
+Fields: product_id, timestamp, quantity_change, store_id
+Sample data:
+{ "product_id": "P501", "timestamp": "2023-11-23 23:59:00", "quantity_change": -2,
+"store_id": "W001" }
+
+2.Create the project under gcp account and then create below pub-sub topics using pub-sub service
+  a.Sales_data
+  b.Inventory_data
+
+3.Run gcp_inventory_data_producer.py and  gcp_sales_data_producer.py which will produces the real time payload on sales_data and inventory_data
+pub-sub topics
+
+4.Create salesflow and inventoryflow dataflow jobs using dataflow service on GCP which will subscribe the messages from sales and inventory data
+topics and load into big query table 
